@@ -22,7 +22,7 @@ async function uploadUnzippedFileToStorage(localFilePath, remoteFileName) {
   await bucket.upload(localFilePath, {
     destination: remoteFileName
   });
-  const fileUrl = `https://storage.googleapis.com/${bucket.name}/${remoteFileName}`;
+  const fileUrl = `${remoteFileName}`;
   console.log(`Archivo subido a ${remoteFileName}`);
   return fileUrl;
 }

@@ -27,7 +27,7 @@ exports.uploadFile = async (req, res, next) => {
               const localFilePath = path.join(extractPath, file);
               const remoteFilePath = `unzipped/${file}`;
               const fileUrl = await uploadUnzippedFileToStorage(localFilePath, remoteFilePath);
-              uploadedFiles.push({ name: file, url: fileUrl });
+              uploadedFiles.push({ name: file, path: fileUrl });
             }
             await uploadFilesRoutes(uploadedFiles)
             res.status(200).json({ resp: true, msg: "Archivos guardados consultar lista de archivos" })
