@@ -1,7 +1,7 @@
 const unzipper = require('unzipper');
 const fs = require('fs');
 const path = require('path');
-const { uploadFileToStorage } = require('../src/firebase');
+const { uploadFileToStorage, uploadUnzippedFileToStorage, uploadFilesRoutes } = require('../src/firebase');
 
 exports.uploadFile = async (req, res, next) => {
   try {
@@ -22,14 +22,22 @@ exports.uploadFile = async (req, res, next) => {
           }
           try {
             await uploadFileToStorage(filePath, remoteFileName);
-            res.json({ files });
+            const uploadedFiles = [];
+            for (const file of files) {
+              const localFilePath = path.join(extractPath, file);
+              const remoteFilePath = `unzipped/${file}`;
+              const fileUrl = await uploadUnzippedFileToStorage(localFilePath, remoteFilePath);
+              uploadedFiles.push({ name: file, url: fileUrl });
+            }
+            await uploadFilesRoutes(uploadedFiles)
+            res.status(200).json({ resp: true, msg: "Archivos guardados consultar lista de archivos" })
           } catch (error) {
-            res.status(500).json({ error: 'Error al subir el archivo a Storage' });
+            throw new Error("Error al subir los archivos a Storage o guardar en Firestore")
           }
         });
       })
       .on('error', (err) => {
-        throw new Error("No se pudo descomprimir el archivo");
+        throw new Error("No se pudo descomprimir el archivo")
       });
   } catch (err) {
     next(err)

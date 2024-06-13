@@ -17,4 +17,22 @@ async function uploadFileToStorage(localFilePath, remoteFileName) {
   console.log(`Archivo subido a ${remoteFileName}`);
 }
 
-module.exports = { uploadFileToStorage };
+async function uploadUnzippedFileToStorage(localFilePath, remoteFileName) {
+  const bucket = admin.storage().bucket();
+  await bucket.upload(localFilePath, {
+    destination: remoteFileName
+  });
+  const fileUrl = `https://storage.googleapis.com/${bucket.name}/${remoteFileName}`;
+  console.log(`Archivo subido a ${remoteFileName}`);
+  return fileUrl;
+}
+
+async function uploadFilesRoutes(files) {
+  const db = admin.firestore();
+  files.forEach(data => {
+    db.collection('files').doc(data.name).set(data);
+  });
+  console.log("archivos cargados con éxito");
+}
+
+module.exports = { uploadFileToStorage, uploadUnzippedFileToStorage, uploadFilesRoutes };
