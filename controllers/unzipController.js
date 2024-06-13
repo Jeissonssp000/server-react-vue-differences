@@ -1,11 +1,13 @@
 const unzipper = require('unzipper');
 const fs = require('fs');
 const path = require('path');
+const { uploadFileToStorage } = require('../src/firebase');
 
-exports.uploadFile = async (req, res) => {
+exports.uploadFile = async (req, res, next) => {
   try {
     const filePath = req.file.path;
     const extractPath = path.join(__dirname, 'extracted_files');
+    const remoteFileName = `uploads/${req.file.originalname}`;
 
     if (!fs.existsSync(extractPath)) {
       fs.mkdirSync(extractPath);
@@ -14,17 +16,22 @@ exports.uploadFile = async (req, res) => {
     fs.createReadStream(filePath)
       .pipe(unzipper.Extract({ path: extractPath }))
       .on('close', () => {
-        fs.readdir(extractPath, (err, files) => {
+        fs.readdir(extractPath, async (err, files) => {
           if (err) {
-            return res.status(500).json({ error: 'Error al leer los archivos descomprimidos' });
+            throw new Error("Error al leer los archivos descomprimidos");
           }
-          res.json({ files });
+          try {
+            await uploadFileToStorage(filePath, remoteFileName);
+            res.json({ files });
+          } catch (error) {
+            res.status(500).json({ error: 'Error al subir el archivo a Storage' });
+          }
         });
       })
       .on('error', (err) => {
-        res.status(500).json({ error: 'Error al descomprimir el archivo' });
+        throw new Error("No se pudo descomprimir el archivo");
       });
   } catch (err) {
-    res.status(500).json({ error: 'Error al procesar el archivo' });
+    next(err)
   }
 }

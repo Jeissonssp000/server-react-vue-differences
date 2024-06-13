@@ -1,4 +1,5 @@
-function errorHandler(err, req, res, next) {
+function errorHandler(err, req, res) {
+  console.log(err);
   if (err.message) {
     if (err.message.includes("invalid")) {
       err.status = 400;
